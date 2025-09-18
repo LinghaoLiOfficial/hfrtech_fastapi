@@ -1,5 +1,0 @@
-{
-    "max_stock_price_threshold": 60,
-    "recent_window_len": 180,
-    "x_axis_tick_interval": 7
-}

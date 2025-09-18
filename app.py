@@ -5,19 +5,14 @@ from dotenv import load_dotenv, find_dotenv
 import uvicorn
 
 # 导入路由模块
-from controller.fa_controller import fa_router
 from controller.file_controller import file_router
-from controller.lr_controller import lr_router
-from controller.mta_controller import mta_router
 from controller.test_controller import test_router
-from task.TaskManager import TaskManager
 
 # 加载全局环境变量
 load_dotenv(find_dotenv(), verbose=True)
 
 # 实例化FastAPI框架
 app = FastAPI()
-task_executor = TaskManager()
 
 # 配置CORS跨域
 app.add_middleware(
@@ -30,10 +25,7 @@ app.add_middleware(
 
 # 批量注册路由
 routers_list = [
-    fa_router,
     file_router,
-    lr_router,
-    mta_router,
     test_router
 
 ]

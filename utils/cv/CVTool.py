@@ -1,4 +1,0 @@
-
-
-class CVTool:
-    pass
