@@ -6,32 +6,32 @@ class LRMapper:
 
     @classmethod
     async def select_validation_where_email(cls, params):
-        sql = "SELECT * FROM nst.lr_validation WHERE email = %s"
+        sql = "SELECT * FROM nst.lr_validation WHERE email = %(email)s"
         return await AsyncSqlDriver.execute_read(sql, params)
 
     @classmethod
     async def select_user_where_email_and_password(cls, params):
-        sql = "SELECT * FROM nst.user WHERE email = %s and password = %s"
+        sql = "SELECT * FROM nst.user WHERE email = %(email)s and password = %(password)s"
         return await AsyncSqlDriver.execute_read(sql, params)
 
     @classmethod
     async def select_user_where_email(cls, params):
-        sql = "SELECT * FROM nst.user WHERE email = %s"
+        sql = "SELECT * FROM nst.user WHERE email = %(email)s"
         return await AsyncSqlDriver.execute_read(sql, params)
 
     @classmethod
     async def delete_validation(cls, params):
-        sql = "DELETE FROM nst.lr_validation WHERE email = %s"
+        sql = "DELETE FROM nst.lr_validation WHERE email = %(email)s"
         return await AsyncSqlDriver.execute_write(sql, params)
 
     @classmethod
     async def insert_validation(cls, params):
-        sql = "INSERT INTO nst.lr_validation (validation_id, email, code, create_timestamp) VALUES (%s, %s, %s, NOW())"
+        sql = "INSERT INTO nst.lr_validation (validation_id, email, code, create_timestamp) VALUES (%(validation_id)s, %(email)s, %(code)s, NOW())"
         return await AsyncSqlDriver.execute_write(sql, params)
 
     @classmethod
     async def insert_user(cls, params):
-        sql = "INSERT INTO nst.user (user_id, email, password, salt, auth, create_timestamp) VALUES (%s, %s, %s, %s, %s, NOW())"
+        sql = "INSERT INTO nst.user (user_id, email, password, salt, auth, create_timestamp) VALUES (%(user_id)s, %(email)s, %(password)s, %(salt)s, %(auth)s, NOW())"
         return await AsyncSqlDriver.execute_write(sql, params)
 
     @classmethod
