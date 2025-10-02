@@ -5,11 +5,10 @@ from dotenv import load_dotenv, find_dotenv
 import uvicorn
 
 # 导入路由模块
-from controller.fa_controller import fa_router
-from controller.file_controller import file_router
-from controller.lr_controller import lr_router
-from controller.mta_controller import mta_router
-from controller.test_controller import test_router
+from controller.fa_controller import router as fa_router
+from controller.file_controller import router as file_router
+from controller.lr_controller import router as lr_router
+from controller.mta_controller import router as mta_router
 from task.TaskManager import TaskManager
 
 # 加载全局环境变量
@@ -33,8 +32,7 @@ routers_list = [
     fa_router,
     file_router,
     lr_router,
-    mta_router,
-    test_router
+    mta_router
 
 ]
 for router in routers_list:
@@ -45,13 +43,6 @@ for router in routers_list:
 @app.get("/")
 async def default():
     return {"status": 200}
-
-
-# # 应用生命周期管理
-# @app.on_event("shutdown")
-# def shutdown_event():
-#     """应用关闭时关闭执行器"""
-#     task_executor.shutdown(wait=True)
 
 
 # 启动配置

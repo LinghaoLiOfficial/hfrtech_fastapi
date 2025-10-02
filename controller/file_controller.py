@@ -3,11 +3,11 @@ from fastapi import APIRouter
 from service.file.FileService import FileService
 from fastapi.responses import FileResponse
 
-file_router = APIRouter(prefix="/file")
+router = APIRouter(prefix="/file")
 
 
 # 获取任意本地文件
-@file_router.get("/{file_path:path}")
+@router.get("/{file_path:path}")
 async def get_file_api(file_path: str):
     """
     获取指定路径的文件

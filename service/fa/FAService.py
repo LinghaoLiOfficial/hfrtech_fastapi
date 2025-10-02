@@ -14,14 +14,14 @@ from utils.web.Resp import Resp
 class FAService:
 
     @classmethod
-    def update_portfolio_name(cls, portfolio_id, new_portfolio_name, token):
+    async def update_portfolio_name(cls, portfolio_id, new_portfolio_name, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        FAMapper.update_portfolio_on_portfolio_name({
+        await FAMapper.update_portfolio_on_portfolio_name({
             "portfolio_name": new_portfolio_name,
             "portfolio_id": portfolio_id
         })
@@ -29,14 +29,14 @@ class FAService:
         return Resp.build_success(message="更新成功")
 
     @classmethod
-    def delete_portfolio_stock(cls, stock_id, portfolio_id, token):
+    async def delete_portfolio_stock(cls, stock_id, portfolio_id, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        FAMapper.delete_portfolio_stock_where_stock_id_and_portfolio_id({
+        await FAMapper.delete_portfolio_stock_where_stock_id_and_portfolio_id({
             "stock_id": stock_id,
             "belong_portfolio_id": portfolio_id
         })
@@ -62,7 +62,7 @@ class FAService:
         return Resp.build_success()
 
     @classmethod
-    def add_portfolio_stock(cls, stock_name, portfolio_id, token):
+    async def add_portfolio_stock(cls, stock_name, portfolio_id, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
@@ -72,7 +72,7 @@ class FAService:
         stock_name = stock_name.replace(" ", "").replace("*", "")
 
         # 判断股票名称是否正确
-        mysql_result = FAMapper.select_global_stock_where_stock_name({
+        mysql_result = await FAMapper.select_global_stock_where_stock_name({
             "stock_name": stock_name
         })
         if not mysql_result.verify_data_on_results():
@@ -81,7 +81,7 @@ class FAService:
                 message="股票名称输入有误"
             )
         # 判断股票是否已经存在于持仓组合中
-        mysql_result1 = FAMapper.select_portfolio_stock_where_stock_name({
+        mysql_result1 = await FAMapper.select_portfolio_stock_where_stock_name({
             "belong_portfolio_id": portfolio_id,
             "stock_name": stock_name
         })
@@ -97,7 +97,7 @@ class FAService:
         stock_current_price_df = ak.stock_individual_info_em(symbol=stock_info["stock_code"])
         stock_current_price = stock_current_price_df.loc[stock_current_price_df['item'] == '最新', 'value'].values[0]
 
-        FAMapper.insert_portfolio_stock({
+        await FAMapper.insert_portfolio_stock({
             "stock_id": StrGenerator.generate_uuid(),
             "belong_portfolio_id": portfolio_id,
             "belong_user_id": user_id,
@@ -110,31 +110,31 @@ class FAService:
         return Resp.build_success(message="添加成功")
 
     @classmethod
-    def delete_portfolio(cls, portfolio_id, token):
+    async def delete_portfolio(cls, portfolio_id, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        FAMapper.delete_portfolio({
+        await FAMapper.delete_portfolio({
             "portfolio_id": portfolio_id
         })
-        FAMapper.delete_portfolio_stock_where_portfolio_id({
+        await FAMapper.delete_portfolio_stock_where_portfolio_id({
             "belong_portfolio_id": portfolio_id
         })
 
         return Resp.build_success(message="删除成功")
 
     @classmethod
-    def get_portfolio_list(cls, token):
+    async def get_portfolio_list(cls, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        mysql_result = FAMapper.select_portfolio({
+        mysql_result = await FAMapper.select_portfolio({
             "belong_user_id": user_id
         })
         # 倒序排序
@@ -142,7 +142,7 @@ class FAService:
 
         # 获取持仓组合的对应股票列表
         for i in range(len(my_portfolio_list)):
-            mysql_result1 = FAMapper.select_portfolio_stock({
+            mysql_result1 = await FAMapper.select_portfolio_stock({
                 "belong_portfolio_id": my_portfolio_list[i]["portfolio_id"]
             })
             portfolio_stocks = mysql_result1.get_data_on_results() if mysql_result1.verify_data_on_results() else []
@@ -152,7 +152,7 @@ class FAService:
             my_portfolio_list[i]["portfolio_stocks"] = portfolio_stocks
 
             # 获取所有的行业名称
-            mysql_result2 = FAMapper.select_global_stock({})
+            mysql_result2 = await FAMapper.select_global_stock({})
             all_industry_name_list = list(set([x["industry_name"] for x in mysql_result2.get_data_on_results()]))
 
             # 获取已经拥有的行业名称
@@ -170,19 +170,19 @@ class FAService:
         })
 
     @classmethod
-    def add_portfolio(cls, token):
+    async def add_portfolio(cls, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        mysql_result = FAMapper.select_portfolio({
+        mysql_result = await FAMapper.select_portfolio({
             "belong_user_id": user_id
         })
         my_portfolio_list = mysql_result.get_data_on_results()
 
-        FAMapper.insert_portfolio({
+        await FAMapper.insert_portfolio({
             "portfolio_id": StrGenerator.generate_uuid(),
             "portfolio_name": f"我的持仓组合 ({len(my_portfolio_list) + 1})",
             "belong_user_id": user_id
@@ -191,14 +191,14 @@ class FAService:
         return Resp.build_success()
 
     @classmethod
-    def set_stock_selection_config(cls, stock_selection_config, token):
+    async def set_stock_selection_config(cls, stock_selection_config, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        FAMapper.update_stock_selection_config({
+        await FAMapper.update_stock_selection_config({
             "max_stock_price_threshold": stock_selection_config["max_stock_price_threshold"],
             "recent_window_len": stock_selection_config["recent_window_len"],
             "x_axis_tick_interval": stock_selection_config["x_axis_tick_interval"],
@@ -208,14 +208,14 @@ class FAService:
         return Resp.build_success()
 
     @classmethod
-    def get_stock_selection_config(cls, token):
+    async def get_stock_selection_config(cls, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        mysql_result = FAMapper.select_stock_selection_config({
+        mysql_result = await FAMapper.select_stock_selection_config({
             "belong_user_id": user_id
         })
         stock_selection_config = mysql_result.get_data_on_results()[0]
@@ -240,13 +240,13 @@ class FAService:
             })
 
         # 如果有空值参数
-        FAMapper.update_stock_selection_config({
+        await FAMapper.update_stock_selection_config({
             "max_stock_price_threshold": stock_selection_config["max_stock_price_threshold"],
             "recent_window_len": stock_selection_config["recent_window_len"],
             "x_axis_tick_interval": stock_selection_config["x_axis_tick_interval"],
             "belong_user_id": user_id
         })
-        mysql_result1 = FAMapper.select_stock_selection_config({
+        mysql_result1 = await FAMapper.select_stock_selection_config({
             "belong_user_id": user_id
         })
         new_stock_selection_config = mysql_result1.get_data_on_results()[0]
@@ -255,7 +255,7 @@ class FAService:
         })
 
     @classmethod
-    def get_industry_list(cls):
+    async def get_industry_list(cls):
         industry_list = []
         industry_df = ak.stock_board_industry_name_em()
         for i in range(len(industry_df) - 1, -1, -1):
@@ -280,11 +280,11 @@ class FAService:
         })
 
     @classmethod
-    def get_stocks_data_with_image_list(cls, industry_name):
+    async def get_stocks_data_with_image_list(cls, industry_name):
         if industry_name == "全部":
-            mysql_result = FAMapper.select_stock_price({})
+            mysql_result = await FAMapper.select_stock_price({})
         else:
-            mysql_result = FAMapper.select_stock_price_where_industry_name({
+            mysql_result = await FAMapper.select_stock_price_where_industry_name({
                 "industry_name": industry_name
             })
 
@@ -306,7 +306,7 @@ class FAService:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        mysql_result = FAMapper.select_stock_selection_config({
+        mysql_result = await FAMapper.select_stock_selection_config({
             "belong_user_id": user_id
         })
         stock_selection_config = mysql_result.get_data_on_results()[0]

@@ -15,14 +15,14 @@ class MTAService:
 
     # TODO
     @classmethod
-    def frame_labeling(cls, token):
+    async def frame_labeling(cls, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
             return Resp.build_jwt_error(jwt_parser_result)
         user_id = jwt_parser_result.get_data_on_results()
 
-        mysql_result = MTAMapper.select_frame_where_user_id({
+        mysql_result = await MTAMapper.select_frame_where_user_id({
             "user_id": user_id
         })
         frame_detail_list = sorted(mysql_result.get_data_on_results(), key=lambda v: v["frame_number"])
@@ -120,7 +120,7 @@ class MTAService:
             print(f"已保存: {output_path}")
 
     @classmethod
-    def start_analysis_video(cls, share_url, token):
+    async def start_analysis_video(cls, share_url, token):
         # 解析token
         jwt_parser_result = JWTParser.decode_user_id(token=token)
         if not jwt_parser_result.status:
@@ -128,7 +128,7 @@ class MTAService:
         user_id = jwt_parser_result.get_data_on_results()
 
         task_id = StrGenerator.generate_uuid()
-        MTAMapper.insert_task({
+        await MTAMapper.insert_task({
             "task_id": task_id,
             "belong_user_id": user_id,
             "task_name": "",  # TODO

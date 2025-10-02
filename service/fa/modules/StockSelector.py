@@ -31,7 +31,7 @@ class StockSelector:
 
         all_stock_df = ak.stock_zh_a_spot_em()
 
-        FAMapper.delete_all_global_stock({})
+        FAMapper.sync_delete_all_global_stock({})
 
         for i in tqdm(range(len(all_stock_df)), desc="insert stock"):
             stock_code = all_stock_df.loc[i, "代码"]
@@ -41,7 +41,7 @@ class StockSelector:
             stock_info_df = ak.stock_individual_info_em(symbol=stock_code)
             industry_name = stock_info_df.loc[stock_info_df['item'] == '行业', 'value'].values[0]
 
-            FAMapper.insert_global_stock({
+            FAMapper.sync_insert_global_stock({
                 "stock_id": StrGenerator.generate_uuid(),
                 "stock_code": stock_code,
                 "stock_name": stock_name,
@@ -101,7 +101,7 @@ class StockSelector:
                         continue
 
                     # 若股票不存在于全局股票库
-                    mysql_result0 = FAMapper.select_global_stock_where_stock_name({
+                    mysql_result0 = FAMapper.sync_select_global_stock_where_stock_name({
                         "stock_name": stock_name
                     })
                     if not mysql_result0.verify_data_on_results():
@@ -211,13 +211,13 @@ class StockSelector:
                     # 保存数据
 
                     # 判断当前股票数据是否存在
-                    mysql_result = FAMapper.select_stock_price_where_belong_user_id_and_stock_code({
+                    mysql_result = FAMapper.sync_select_stock_price_where_belong_user_id_and_stock_code({
                         "belong_user_id": user_id,
                         "stock_code": stock_code
                     })
                     if mysql_result.verify_data_on_results():
                         # 当前股票数据存在，则更新旧数据
-                        FAMapper.update_stock_price({
+                        FAMapper.sync_update_stock_price({
                             "stock_current_price": stock_current_price,
                             "stock_buy_refer_price": buy_refer_price,
                             "stock_sell_refer_price": sell_refer_price,
@@ -226,7 +226,7 @@ class StockSelector:
                         })
                     else:
                         # 当前股票数据不存在，则插入新的数据
-                        FAMapper.insert_stock_price({
+                        FAMapper.sync_insert_stock_price({
                             "stock_id": StrGenerator.generate_uuid(),
                             "belong_user_id": user_id,
                             "industry_code": industry_code,

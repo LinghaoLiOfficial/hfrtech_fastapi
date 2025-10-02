@@ -13,7 +13,7 @@ from utils.web.Resp import Resp
 class LRService:
 
     @classmethod
-    def verify_token(cls, token):
+    async def verify_token(cls, token):
         jwt_parser_result = JWTParser.decode_user_id(
             token=token
         )
@@ -23,8 +23,8 @@ class LRService:
         return Resp.build_success()
 
     @classmethod
-    def get_salt(cls, email):
-        mysql_result = LRMapper.select_user_where_email({
+    async def get_salt(cls, email):
+        mysql_result = await LRMapper.select_user_where_email({
             "email": email
         })
         salt = mysql_result.get_data_on_results()[0]["salt"]
@@ -34,8 +34,8 @@ class LRService:
         })
 
     @classmethod
-    def user_register(cls, email, hashed_password, validation_code, salt):
-        mysql_result = LRMapper.select_validation_where_email({
+    async def user_register(cls, email, hashed_password, validation_code, salt):
+        mysql_result = await LRMapper.select_validation_where_email({
             "email": email
         })
         # 判断邮箱验证码是否存在
@@ -55,7 +55,7 @@ class LRService:
         user_id = StrGenerator.generate_uuid()
 
         # 新增用户
-        mysql_result1 = LRMapper.insert_user({
+        mysql_result1 = await LRMapper.insert_user({
             "user_id": user_id,
             "email": email,
             "password": hashed_password,
@@ -64,22 +64,22 @@ class LRService:
         })
 
         # 创建用户节点
-        neo4j_result = LRMapper.merge_user_node({
+        neo4j_result = await LRMapper.merge_user_node({
             "user_id": user_id,
             "email": email
         })
 
         # 删除验证码信息
-        LRMapper.delete_validation({
+        await LRMapper.delete_validation({
             "email": email
         })
 
         return Resp.build_success(message="注册成功")
 
     @classmethod
-    def send_email(cls, email):
+    async def send_email(cls, email):
         # 查询邮箱是否已被注册
-        mysql_result = LRMapper.select_user_where_email({
+        mysql_result = await LRMapper.select_user_where_email({
             "email": email
         })
         if mysql_result.verify_data_on_results():
@@ -89,7 +89,7 @@ class LRService:
             )
 
         # 查询邮箱发送是否过于频繁
-        mysql_result1 = LRMapper.select_validation_where_email({
+        mysql_result1 = await LRMapper.select_validation_where_email({
             "email": email
         })
         if mysql_result1.verify_data_on_results():
@@ -101,13 +101,13 @@ class LRService:
                 )
 
         # 删除原有验证数据
-        LRMapper.delete_validation({
+        await LRMapper.delete_validation({
             "email": email
         })
 
         # 添加新的验证数据
         validation_code = StrGenerator.generate_validation_code()
-        LRMapper.insert_validation({
+        await LRMapper.insert_validation({
             "validation_id": StrGenerator.generate_uuid(),
             "email": email,
             "code": validation_code
@@ -124,9 +124,9 @@ class LRService:
         return Resp.build_success(message="邮箱已发送")
 
     @classmethod
-    def user_login(cls, email, password):
+    async def user_login(cls, email, password):
         # 根据用户名，查询用户
-        mysql_result = LRMapper.select_user_where_email({
+        mysql_result = await LRMapper.select_user_where_email({
             "email": email
         })
         if not mysql_result.status:
@@ -140,7 +140,7 @@ class LRService:
             )
 
         # 根据用户名+密码，查询用户
-        mysql_result1 = LRMapper.select_user_where_email_and_password({
+        mysql_result1 = await LRMapper.select_user_where_email_and_password({
             "email": email,
             "password": password
         })
@@ -180,11 +180,11 @@ class LRService:
                 os.makedirs(zone_user_storage_path, exist_ok=True)
 
         # 初始化fa_stock_selection_config配置
-        mysql_result2 = FAMapper.select_stock_selection_config({
+        mysql_result2 = await FAMapper.select_stock_selection_config({
             "belong_user_id": user_id
         })
         if not mysql_result2.verify_data_on_results():
-            FAMapper.insert_stock_selection_config({
+            await FAMapper.insert_stock_selection_config({
                 "config_id": StrGenerator.generate_uuid(),
                 "belong_user_id": user_id
             })

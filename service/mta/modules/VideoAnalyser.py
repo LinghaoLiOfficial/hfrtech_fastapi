@@ -44,12 +44,12 @@ class VideoAnalyser:
 
     def understand_frames(self, frame_id_list):
         for frame_id in tqdm(frame_id_list, desc="image understanding..."):
-            mysql_result = MTAMapper.select_frame_where_frame_id({
+            mysql_result = MTAMapper.sync_select_frame_where_frame_id({
                 "frame_id": frame_id
             })
             frame_file_path = mysql_result.get_data_on_results()[0]["file_path"]
             frame_info_dict = LLMServiceClient.locate_and_understand_img(frame_file_path)
-            MTAMapper.update_frame_on_understanding_info({
+            MTAMapper.sync_update_frame_on_understanding_info({
                 "understanding_info": str(frame_info_dict),
                 "frame_id": frame_id
             })
@@ -61,7 +61,7 @@ class VideoAnalyser:
 
         frames_save_path = f"{GeneralTool.root_path}/storage/{self.user_id}/mta/{self.task_id}/frame"
 
-        mysql_result = MTAMapper.select_video_where_video_id({
+        mysql_result = MTAMapper.sync_select_video_where_video_id({
             "video_id": video_id
         })
         video_save_path = mysql_result.get_data_on_results()[0]["file_path"]
@@ -105,7 +105,7 @@ class VideoAnalyser:
             saved_count += 1
 
             frame_id = StrGenerator.generate_uuid()
-            MTAMapper.insert_frame({
+            MTAMapper.sync_insert_frame({
                 "frame_id": frame_id,
                 "frame_number": saved_count,
                 "belong_video_id": video_id,
@@ -130,7 +130,7 @@ class VideoAnalyser:
         VideoDownloader.download_mp4(url=video_url, save_path=video_save_path)
         video_id = StrGenerator.generate_uuid()
         # 保存视频信息
-        MTAMapper.insert_video({
+        MTAMapper.sync_insert_video({
             "video_id": video_id,
             "belong_user_id": self.user_id,
             "belong_task_id": self.task_id,
