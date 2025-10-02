@@ -1,7 +1,0 @@
-venv/
-model/*
-result/*
-.idea/
-.git
-.env
-test/*
