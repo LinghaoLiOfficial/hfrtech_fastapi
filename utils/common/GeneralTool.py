@@ -1,6 +1,8 @@
 import os.path
 import random
 from dotenv import load_dotenv, find_dotenv
+import numpy as np
+import torch
 import json
 
 
@@ -11,6 +13,7 @@ load_dotenv(find_dotenv(), verbose=True)
 class GeneralTool:
 
     seed = 42  # 全局随机种子
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     @classmethod
@@ -26,4 +29,11 @@ class GeneralTool:
             cfg = json.load(f)
         return cfg
 
+    @classmethod
+    def set_global_seed(cls, seed):
+        cls.seed = seed
+        # 为所有随机数设置全局随机种子
+        random.seed(cls.seed)
+        np.random.seed(cls.seed)
+        torch.manual_seed(cls.seed)
 
