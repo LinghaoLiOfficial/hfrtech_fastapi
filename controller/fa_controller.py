@@ -81,14 +81,14 @@ async def get_stock_selection_config_api(req: Req = Depends(get_req)):
 @router.get("/getIndustryList")
 async def get_industry_list_api(req: Req = Depends(get_req)):
 
-    return FAService.get_industry_list()
+    return await FAService.get_industry_list()
 
 
 @router.get("/getStocksDataWithImageList")
 async def get_stocks_data_with_image_list_api(req: Req = Depends(get_req)):
     industry_name = await req.receive_get_param("industry_name")
 
-    return FAService.get_stocks_data_with_image_list(industry_name=industry_name)
+    return await FAService.get_stocks_data_with_image_list(industry_name=industry_name)
 
 
 @router.post("/updateStocksInfoWithImage")

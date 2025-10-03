@@ -148,7 +148,7 @@ class LRService:
             return Resp.build_db_error()
 
         # 判断密码是否正确
-        if not mysql_result1.verify_data_on_results():
+        if len(mysql_result1.get_data_on_results()) == 0:
             return Resp.build_error(
                 code=50002,
                 message="密码错误"
