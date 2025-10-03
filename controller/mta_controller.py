@@ -6,6 +6,14 @@ from utils.web.Req import Req, get_req
 router = APIRouter(prefix="/mta")
 
 
+@router.get("/directAnalysisVideo")
+def direct_analysis_video_api(req: Req = Depends(get_req)):
+    share_url = req.receive_get_param("shareUrl")
+    # token = req.receive_header_token()
+
+    return MTAService.direct_analysis_video(share_url=share_url)
+
+
 # TODO
 @router.post("/frameLabeling")
 async def frame_labeling_api(req: Req = Depends(get_req)):

@@ -168,7 +168,8 @@ class LRService:
         # 初始化用户存储文件夹
         zone_list = [
             "fa",
-            "mta"
+            "mta",
+            "sr"
         ]
         # 判断用户存储文件夹是否存在，不存在则创建
         user_storage_path = f"{GeneralTool.root_path}/storage/{user_id}"

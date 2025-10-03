@@ -7,10 +7,7 @@ import re
 import time
 
 
-class BaseLLMAPIClient:
-    """
-    0822.ver
-    """
+class LLMAPIClient:
 
     qwen_llm = OpenAI(api_key=os.getenv("QWEN_API_KEY"), base_url=os.getenv("QWEN_API_URL"))
     deepseek_llm = OpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"), base_url=os.getenv("DEEPSEEK_API_URL"))

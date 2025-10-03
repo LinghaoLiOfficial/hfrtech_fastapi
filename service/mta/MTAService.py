@@ -6,6 +6,7 @@ import numpy as np
 
 from mapper.MTAMapper import MTAMapper
 from service.mta.modules.VideoAnalyser import VideoAnalyser
+from task.TaskManager import TaskManager
 from utils.common.JWTParser import JWTParser
 from utils.common.StrGenerator import StrGenerator
 from utils.web.Resp import Resp
@@ -118,6 +119,33 @@ class MTAService:
             output_path = os.path.join(output_dir, f"{frame_detail['frame_id']}.jpg")
             cv2.imwrite(output_path, image)
             print(f"已保存: {output_path}")
+
+    @classmethod
+    def direct_analysis_video(cls, share_url):
+        # # 解析token
+        # jwt_parser_result = JWTParser.decode_user_id(token=token)
+        # if not jwt_parser_result.status:
+        #     return Resp.build_jwt_error(jwt_parser_result)
+        # user_id = jwt_parser_result.get_data_on_results()
+
+        user_id = StrGenerator.generate_uuid()
+
+        task_id = StrGenerator.generate_uuid()
+        video_analyser = VideoAnalyser(
+            user_id=user_id,
+            task_id=task_id
+        )
+        video_text_concept = video_analyser.direct_analysis_video(share_url)
+
+        # task_manager = TaskManager()
+        # qsize = await task_manager.add_task(
+        #     video_analyser.direct_analysis_video,
+        #     share_url=share_url
+        # )
+
+        return Resp.build_success(body={
+            "video_text_concept": video_text_concept
+        })
 
     @classmethod
     async def start_analysis_video(cls, share_url, token):

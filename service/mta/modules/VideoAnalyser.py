@@ -9,17 +9,26 @@ from mapper.MTAMapper import MTAMapper
 from service.mta.modules.VideoDownloader import VideoDownloader
 from utils.common.GeneralTool import GeneralTool
 from utils.common.StrGenerator import StrGenerator
-from utils.llm_api.LLMServiceClient import LLMServiceClient
+from utils.llm_api.LLMAPIClient import LLMAPIClient
+from utils.llm_api.prompts.AnalysisVideoPromptUtil import AnalysisVideoPromptUtil
+from utils.llm_api.prompts.LocateAndUnderstandImgPromptUtil import LocateAndUnderstandImgPromptUtil
 
 
 class VideoAnalyser:
 
-    service_douyin_base_url = f"https://douyin.wtf"
-    # service_douyin_base_url = f"http://localhost:7475"
+    SERVICE_DOUYIN_BASE_URL = f"https://douyin.wtf"
+    # SERVICE_DOUYIN_BASE_URL = f"http://localhost:7475"
 
     def __init__(self, user_id, task_id):
         self.user_id = user_id
         self.task_id = task_id
+
+    def direct_analysis_video(self, share_str):
+        share_url = self.extract_share_url_from_str(share_str)
+        aweme_id = self.get_aweme_id_from_share_url(share_url)
+        video_url = self.get_video_url_from_aweme_id(aweme_id)
+        video_text_concept = self.analysis_video_concept(video_url)
+        return video_text_concept
 
     def run(self, share_str):
         task_folder_path = f"{GeneralTool.root_path}/storage/{self.user_id}/mta/{self.task_id}"
@@ -42,13 +51,32 @@ class VideoAnalyser:
         )
         self.understand_frames(frame_id_list=frame_id_list)
 
+    def analysis_video_concept(self, video_url):
+        template = AnalysisVideoPromptUtil.generate(video_url)
+        video_text_concept = LLMAPIClient.call_qwen_vl_max(messages=template)
+        return video_text_concept
+
     def understand_frames(self, frame_id_list):
         for frame_id in tqdm(frame_id_list, desc="image understanding..."):
             mysql_result = MTAMapper.sync_select_frame_where_frame_id({
                 "frame_id": frame_id
             })
             frame_file_path = mysql_result.get_data_on_results()[0]["file_path"]
-            frame_info_dict = LLMServiceClient.locate_and_understand_img(frame_file_path)
+
+            image_path = f"file://{frame_file_path}"
+
+            template = LocateAndUnderstandImgPromptUtil.generate(image_path)
+
+            retry = 5
+            for _ in range(retry):
+                try:
+                    output_text = LLMAPIClient.call_qwen_vl_max(messages=template)
+                    frame_info_dict = LLMAPIClient.parse_str_to_json(output_text)
+                    if frame_info_dict != {}:
+                        return frame_info_dict
+                except Exception as e:
+                    print(e)
+
             MTAMapper.sync_update_frame_on_understanding_info({
                 "understanding_info": str(frame_info_dict),
                 "frame_id": frame_id
@@ -141,7 +169,7 @@ class VideoAnalyser:
         return video_id
 
     def get_video_url_from_aweme_id(self, aweme_id):
-        fetch_one_video_url = f"{self.service_douyin_base_url}/api/douyin/web/fetch_one_video"
+        fetch_one_video_url = f"{self.SERVICE_DOUYIN_BASE_URL}/api/douyin/web/fetch_one_video"
         fetch_one_video_params = {
             "aweme_id": aweme_id
         }
@@ -155,7 +183,7 @@ class VideoAnalyser:
         return video_url
 
     def get_aweme_id_from_share_url(self, share_url):
-        get_aweme_id_url = f"{self.service_douyin_base_url}/api/douyin/web/get_aweme_id"
+        get_aweme_id_url = f"{self.SERVICE_DOUYIN_BASE_URL}/api/douyin/web/get_aweme_id"
         get_aweme_id_params = {
             "url": share_url
         }
